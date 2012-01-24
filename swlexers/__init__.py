@@ -7,6 +7,8 @@
 
     :copyright: 2007 by Philip Cooper <philip.cooper@openvest.com>.
     :license: BSD, see LICENSE for more details.
+    
+    Modified and extended by Gerrit Niezen. (LICENSE file described above is missing, wasn't distributed with original file) 
 """
 
 import re
@@ -88,9 +90,11 @@ class SparqlLexer(RegexLexer):
             (r'(\s*(?:PREFIX|BASE)\s+)(\w*:\w*)?(\s*<[^> ]*>\s*)',bygroups(Keyword,Name.Variable,Name.Namespace)),
             (r'(\s*#.*)', Comment),
             (r'((?:SELECT|ASK|CONSTRUCT|DESCRIBE)\s*(?:DISTINCT|REDUCED)?\s*)((?:\?[a-zA-Z0-9_-]+\s*)+|\*)(\s*)',bygroups(Keyword,Name.Variable,Text)),
+            (r'(CONSTRUCT)?\s*({)',bygroups(Keyword,Text),'graph'),
             (r'(FROM\s*(?:NAMED)?)(\s*.*)', bygroups(Keyword,Text)),
             (r'(WHERE)?\s*({)',bygroups(Keyword,Text),'graph'),
             (r'(LIMIT|OFFSET)(\s*[+-]?[0-9]+)',bygroups(Keyword,Literal.String)),
+            (r'\s*}', Text), 
         ],
         'graph':[
             (r'\s*(<[^>]*\>)', Name.Class, ('triple','predObj')),
@@ -98,7 +102,9 @@ class SparqlLexer(RegexLexer):
             (r'(\s*\?[a-zA-Z0-9_-]*)', Name.Variable, ('triple','predObj')),            
             (r'\s*\[\]\s*', Name.Class, ('triple','predObj')),
             (r'\s*(FILTER\s*)((?:regex)?\()',bygroups(Keyword,Text),'filterExp'),
+            (r'\s*(BIND\s*)(\(\s*)',bygroups(Keyword,Text),'bindgraph'),
             (r'\s*}', Text, '#pop'),
+            (r'\s*\.\s*', Text, '#pop'),
         ],
         'triple' : [
             (r'(?=\s*})', Text, '#pop'),                    
@@ -124,6 +130,7 @@ class SparqlLexer(RegexLexer):
             (r'\s*".*?[^\\]"(?:\@[a-z]{2-4}|\^\^<?[a-zA-Z0-9\-\:_#/\.]*>?)?\s*', Literal.String),
             (r'\s*[a-zA-Z0-9\-_\:]\s*', Name.Attribute),
             (r'\s*\(', Text, 'objList'),
+            (r',', Text),
             (r'\s*;\s*', Text, '#pop'),
             (r'(?=\])', Text, '#pop'),            
             (r'(?=\.)', Text, '#pop'),           
@@ -137,6 +144,16 @@ class SparqlLexer(RegexLexer):
             (r'\s*[+*/<>=~!%&|-]+\s*', Operator),
             (r'\s*\)', Text, '#pop'),            
         ],
+        'bindgraph':[
+            include('variable'),
+            (r'\s*(IRI\s*)(\(\s*)',bygroups(Keyword,Text),'iri'),
+            (r'(\s*[a-zA-Z_0-9\-]*:[a-zA-Z0-9\-_]*)(\s*)', bygroups(Name.Attribute,Text)),
+            (r'(\s*AS)(\s*\?[a-zA-Z0-9_-]*)',bygroups(Keyword,Name.Variable)),
+            (r'\s*\)', Text, '#pop'),
+        ],
+        'iri':[
+            include('object'),
+            (r'\s*\)', Text, '#pop'),
+        ],
 
     }
-
