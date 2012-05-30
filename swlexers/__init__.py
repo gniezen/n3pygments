@@ -94,6 +94,7 @@ class SparqlLexer(RegexLexer):
             (r'(FROM\s*(?:NAMED)?)(\s*.*)', bygroups(Keyword,Text)),
             (r'(WHERE)?\s*({)',bygroups(Keyword,Text),'graph'),
             (r'(LIMIT|OFFSET)(\s*[+-]?[0-9]+)',bygroups(Keyword,Literal.String)),
+			(r'(ORDER BY (?:ASC|DESC)\s*)(\(\s*)',bygroups(Keyword,Text),'bindgraph'),
             (r'\s*}', Text), 
         ],
         'graph':[
