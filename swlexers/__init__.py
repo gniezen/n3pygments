@@ -147,6 +147,7 @@ class SparqlLexer(RegexLexer):
         ],
         'bindgraph':[
             include('variable'),
+			include('object'),
             (r'\s*(IRI\s*)(\(\s*)',bygroups(Keyword,Text),'iri'),
             (r'(\s*[a-zA-Z_0-9\-]*:[a-zA-Z0-9\-_]*)(\s*)', bygroups(Name.Attribute,Text)),
             (r'(\s*AS)(\s*\?[a-zA-Z0-9_-]*)',bygroups(Keyword,Name.Variable)),
