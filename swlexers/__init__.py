@@ -94,12 +94,22 @@ class SparqlLexer(RegexLexer):
              bygroups(Keyword, Keyword, Name.Attribute, Text, Text)),
             (r'((?:ADD|MOVE|COPY)\s*(?:SILENT)?\s*)(\s*(?:GRAPH)?\s*)(\s*<[^> ]*>\s*)((?:TO)\s*)(\s*(?:GRAPH)?\s*)(\s*<[^> ]*>\s*)?(;)(\s*)',
              bygroups(Keyword, Keyword, Name.Attribute, Keyword, Keyword, Name.Attribute, Text, Text)),
+            (r'((?:INSERT|DELETE)\s*DATA)\s*',bygroups(Keyword),'quaddata'),
             (r'(CONSTRUCT)?\s*({)',bygroups(Keyword,Text),'graph'),
             (r'(FROM\s*(?:NAMED)?)(\s*.*)', bygroups(Keyword,Text)),
             (r'(WHERE)?\s*({)',bygroups(Keyword,Text),'graph'),
             (r'(LIMIT|OFFSET)(\s*[+-]?[0-9]+)',bygroups(Keyword,Literal.String)),
 			(r'(ORDER BY (?:ASC|DESC)\s*)(\(\s*)',bygroups(Keyword,Text),'bindgraph'),
             (r'\s*}', Text), 
+        ],
+        'quaddata':[
+            (r'\s*({)\s*(GRAPH)(\s*<[^> ]*>\s*)', bygroups(Text, Keyword, Name.Attribute), 'quads'),
+            (r'\s*({)\s*',bygroups(Text), 'graph'),
+        ],
+        'quads':[
+            (r'\s*({)\s*(GRAPH)(\s*<[^> ]*>\s*)', bygroups(Text, Keyword, Name.Attribute), 'quads'),
+            (r'\s*({)\s*', Text, 'graph'),
+            (r'\s*(})\s*', Text, '#pop'),
         ],
         'graph':[
             (r'\s*(<[^>]*\>)', Name.Class, ('triple','predObj')),
