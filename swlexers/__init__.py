@@ -116,7 +116,7 @@ class SparqlLexer(RegexLexer):
             (r'(\s*[a-zA-Z_0-9\-]*:[a-zA-Z0-9\-_]*\s)', Name.Class, ('triple','predObj')),
             (r'(\s*\?[a-zA-Z0-9_-]*)', Name.Variable, ('triple','predObj')),            
             (r'\s*\[\]\s*', Name.Class, ('triple','predObj')),
-            (r'\s*(FILTER\s*)((?:regex)?\()',bygroups(Keyword,Text),'filterExp'),
+            (r'\s*(FILTER)(\s*)',bygroups(Keyword,Text),'filterConstraint'),
             (r'\s*(BIND\s*)(\(\s*)',bygroups(Keyword,Text),'bindgraph'),
             (r'\s*(OPTIONAL)(\s*{)',bygroups(Keyword, Text), '#push'),
             (r'\s*}\s*\.\s*', Text, '#pop'),
@@ -155,7 +155,36 @@ class SparqlLexer(RegexLexer):
         'variable':[
             (r'(\?[a-zA-Z0-9\-_]+\s*)', Name.Variable),            
         ],
+        'filterConstraint':[
+            include('filterBuiltin'),
+            (r'\s*\(\s*', Text, 'filterExp'),
+            (r'\s*\.\s*', Text, '#pop'),
+        ],
+        #filterBuiltin is intended to be included, not pushed
+        'filterBuiltin':[
+            include('aggregate'),
+            (r'(str|lang|langmates|datatype|bound|iri|uri|bnode)\s*(\()', bygroups(Name.Builtin, Text), 'objList'),
+            (r'(abs|ceil|floor|round)\s*(\()', bygroups(Name.Builtin, Text), 'objList'),
+            (r'(strlen|ucase|lcase|encode_for_uri|contains|strstarts|strends|strbefore|strafter)\s*(\()', bygroups(Name.Builtin, Text), 'objList'),
+            (r'(year|month|day|hours|minutes|seconds|timezone|tz)\s*(\()', bygroups(Name.Builtin, Text), 'objList'),
+            (r'(md5|sha1|sha256|sha384|sha512)\s*(\()', bygroups(Name.Builtin, Text), 'objList'),
+            (r'(if|strlang|strdt)\s*(\()', bygroups(Name.Builtin, Text), 'objList'),
+            (r'(sameterm|isIRI|isURI|isBlank|isLiteral|isNumeric)\s*(\()', bygroups(Name.Builtin, Text), 'objList'),
+            (r'(regex)\s*(\()', bygroups(Name.Builtin, Text), 'objList'),
+        ],
+        # aggregate  is intended to be included, not pushed
+        'aggregate':[
+            (r'\s*(COUNT)\s*(\()\s*(DISTINCT)?\s*(\*)\s*', bygroups(Keyword, Punctuation, Keyword, Keyword)),
+            (r'\s*(COUNT|SUM|MIN|MAX|AVG|SAMPLE)\s*(\()\s*(DISTINCT)?\s*', bygroups(Keyword, Punctuation, Keyword), 'filterExp'),
+            (r'\s*(GROUP_CONCAT)\s*(\()\s*(DISTINCT)?\s*', bygroups(Keyword, Punctuation, Keyword), 'groupConcatExp'),
+        ],
+        'groupConcatExp':[
+            (r'\s*(;)\s*(SEPARATOR)\s*(=)\s*', bygroups(Punctuation, Keyword, Operator), 'string'),
+            include('filterExp'),
+         ],
         'filterExp':[
+            include('filterBuiltin'),
+            (r'\s*\(\s*', Text, '#push'),
             include('variable'),
             include('object'),
             (r'\s*[+*/<>=~!%&|-]+\s*', Operator),
