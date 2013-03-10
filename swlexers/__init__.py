@@ -148,7 +148,7 @@ class SparqlLexer(RegexLexer):
             (r',', Text),
             (r'\s*;\s*', Text, '#pop'),
             (r'(?=\])', Text, '#pop'),            
-            (r'(?=\.)', Text, '#pop'),           
+            (r'\s*(?=\.)', Text, '#pop'),
         ],
         'variable':[
             (r'(\?[a-zA-Z0-9\-_]+\s*)', Name.Variable),            
