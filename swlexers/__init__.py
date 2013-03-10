@@ -118,6 +118,8 @@ class SparqlLexer(RegexLexer):
             (r'\s*\[\]\s*', Name.Class, ('triple','predObj')),
             (r'\s*(FILTER\s*)((?:regex)?\()',bygroups(Keyword,Text),'filterExp'),
             (r'\s*(BIND\s*)(\(\s*)',bygroups(Keyword,Text),'bindgraph'),
+            (r'\s*(OPTIONAL)(\s*{)',bygroups(Keyword, Text), '#push'),
+            (r'\s*}\s*\.\s*', Text, '#pop'),
             (r'\s*}', Text, '#pop'),
             (r'\s*\.\s*', Text, '#pop'),
         ],
