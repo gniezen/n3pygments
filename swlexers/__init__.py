@@ -87,7 +87,7 @@ class SparqlLexer(RegexLexer):
         ],
         'root': [
             include('comments'),        
-            (r'(\s*(?:PREFIX|BASE)\s+)(\w*:\w*)?(\s*<[^> ]*>\s*)',bygroups(Keyword,Name.Variable,Name.Namespace)),
+            (r'(\s*(?:PREFIX|BASE)\s+)([\w-]*:[\w-]*)?(\s*<[^> ]*>\s*)',bygroups(Keyword,Name.Variable,Name.Namespace)),
             (r'(\s*#.*)', Comment),
             (r'((?:SELECT|ASK|CONSTRUCT|DESCRIBE)\s*(?:DISTINCT|REDUCED)?\s*)((?:\?[a-zA-Z0-9_-]+\s*)+|\*)(\s*)',bygroups(Keyword,Name.Variable,Text)),
             (r'(CONSTRUCT)?\s*({)',bygroups(Keyword,Text),'graph'),
