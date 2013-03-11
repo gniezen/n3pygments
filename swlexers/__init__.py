@@ -162,7 +162,7 @@ class SparqlLexer(RegexLexer):
             (r'\s*<[^> ]*>', Name.Attribute),
             (r'\s*("""(?:.|\n)*?""")(\@[a-z]{2-4}|\^\^<?[a-zA-Z0-9\-\:_#/\.]*>?)?\s*', bygroups(Literal.String,Text)),
             (r'\s*".*?[^\\]"(?:\@[a-z]{2-4}|\^\^<?[a-zA-Z0-9\-\:_#/\.]*>?)?\s*', Literal.String),
-            (r'\s*[0-9\-]\s*', Number),
+            (r'(\s*)((?:[+-])?\d+\.?\d*)(\s*)', bygroups(Text, Number, Text)),
             (r'\s*[a-zA-Z0-9\-_\:]\s*', Name.Attribute),
             (r'\s*\(', Text, 'objList'),
             (r',', Text),
