@@ -9,7 +9,7 @@ sparql = swlexers:SparqlLexer
 """
 setup(
     name         = 'swlexers',
-    version      = '0.2',
+    version      = '0.3',
     description  = __doc__,
     packages     = ['swlexers'],
     entry_points = entry_points
