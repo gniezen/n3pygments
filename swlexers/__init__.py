@@ -97,7 +97,7 @@ class SparqlLexer(RegexLexer):
             (r'\s*((?:INSERT|DELETE)\s*(?:DATA)?)\s*',bygroups(Keyword),'quaddata'),
             (r'\s*(CONSTRUCT)?\s*({)',bygroups(Keyword,Text),'graph'),
             (r'\s*(FROM\s*(?:NAMED)?)(\s*.*)', bygroups(Keyword,Text)),
-            (r'\s*(WHERE)?\s*({)',bygroups(Keyword,Text),'graph'),
+            (r'\s*(WHERE)?\s*({)',bygroups(Keyword,Text),'groupgraph'),
             (r'\s*(LIMIT|OFFSET)(\s*[+-]?[0-9]+)',bygroups(Keyword,Literal.String)),
 			(r'(ORDER BY (?:ASC|DESC)\s*)(\(\s*)',bygroups(Keyword,Text),'bindgraph'),
             (r'\s*}', Text), 
@@ -105,11 +105,19 @@ class SparqlLexer(RegexLexer):
         'quaddata':[
             (r'\s*({)\s*(GRAPH)(\s*<[^> ]*>\s*)', bygroups(Text, Keyword, Name.Attribute), 'quads'),
             (r'\s*({)\s*',bygroups(Text), 'graph'),
+            (r'', Text, '#pop'),
         ],
         'quads':[
             (r'\s*({)\s*(GRAPH)(\s*<[^> ]*>\s*)', bygroups(Text, Keyword, Name.Attribute), 'quads'),
             (r'\s*({)\s*', Text, 'graph'),
             (r'\s*(})\s*', Text, '#pop'),
+        ],
+        'groupgraph':[
+            (r'\s*(UNION)\s*({)\s*', bygroups(Keyword, Text), '#push'),
+            (r'\s*({)\s*',bygroups(Text), '#push'),
+            include('graph'),
+            include('root'),
+            (r'', Text, '#pop'),
         ],
         'graph':[
             (r'\s*(<[^>]*\>)', Name.Class, ('triple','predObj')),
@@ -202,5 +210,8 @@ class SparqlLexer(RegexLexer):
             include('object'),
             (r'\s*\)', Text, '#pop'),
         ],
-
+        'string':[
+            (r'\s*("""(?:.|\n)*?""")(\@[a-z]{2-4}|\^\^<?[a-zA-Z0-9\-\:_#/\.]*>?)?\s*', bygroups(Literal.String,Text), '#pop'),
+            (r'\s*".*?[^\\]"(?:\@[a-z]{2-4}|\^\^<?[a-zA-Z0-9\-\:_#/\.]*>?)?\s*', Literal.String, '#pop'),
+        ],
     }
