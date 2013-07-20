@@ -22,6 +22,50 @@ from pygments.util import shebang_matches
 __all__ = ['Notation3Lexer','SparqlLexer']
 
 
+# The N3 lexer should be close to the not really correct grammar at
+# http://www.w3.org/2000/10/swap/grammar/n3-ietf.txt
+# Comments indicate to which grammar rule the various regular
+# expressions correspond.
+
+_explicit_uri = r'<[^>]*>'
+_qname = r'((\w[-\w]*)?:)?\w[-\w]*|(\w[-\w]*)?:' #(([:letter:][-\w]*)?:)?[:letter:][.\w]*
+_symbol = '(' + _qname + '|' + _explicit_uri +')'
+_quickvariable = r'\?\w+'
+
+def expression(symbolAction, nextState):
+    #expression ::=  | pathitem pathtail
+    #pathitem ::= | "("  pathlist  ")" 
+    #             | "["  propertylist  "]" 
+    #             | "{"  formulacontent  "}" 
+    #             | boolean
+    #             | literal
+    #             | numericliteral
+    #             | quickvariable
+    #             | symbol
+    if not isinstance(nextState,tuple):
+        nextState = (nextState,)
+    nextState = nextState + ('pathtail',)
+    return [
+        #pathlist
+        (r'\(', Punctuation, nextState + ('list',)),
+        #properylist
+        (r'\[', Punctuation, nextState + ('propertyList',)),
+        #formulacontent
+        (r'\{', Punctuation, nextState + ('root',)),
+        #boolean
+        (r'@false|@true', Keyword.Constant, nextState),
+        #literal
+        (r'("""[^"\\]*(?:(?:\\.|"(?!""))[^"\\]*)*""")|("[^"\\]*(?:\\.[^"\\]*)*")', String, nextState + ('dtlang',)),
+        #numericliteral ::= double|integer|rational
+        (r'[-+]?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)', Number.Float, nextState),
+        (r'[-+]?[0-9]+', Number.Integer, nextState),
+        (r'[-+]?[0-9]+/[0-9]+', Number, nextState),
+        #quickvariable
+        (_quickvariable, Name.Variable, nextState),
+        #symbol
+        (_symbol, symbolAction, nextState),
+    ]
+
 class Notation3Lexer(RegexLexer):
     """
     Lexer for the N3 / Turtle / NT
@@ -32,42 +76,65 @@ class Notation3Lexer(RegexLexer):
     mimetypes = ['text/rdf+n3','application/x-turtle','application/n3']
 
     tokens = {
-        'comments': [
-            (r'(\s*#.*)', Comment)
+        'whitespaces': [
+            (r'(#.*)', Comment),
+            (r'\s+', Text),
         ],
+        'pathtailExpression': expression(Name.Function, '#pop'),
+        'pathtail': [
+            # No whitespaces allowed in front!
+            (r'(^|!|\.)(?!\s)', Operator, 'pathtailExpression'),
+            (r'', Text, '#pop'),
+        ],
+        # statement:
         'root': [
-            include('comments'),
-            (r'(\s*@(?:prefix|base|keywords)\s*)(\w*:\s+)?(<[^> ]*>\s*\.\s*)',bygroups(Keyword,Name.Variable,Name.Namespace)),
-            (r'\s*(<[^>]*\>)', Name.Class, ('triple','predObj')),
-            (r'(\s*[a-zA-Z_:][a-zA-Z0-9\-_:]*\s)', Name.Class, ('triple','predObj')),
-            (r'\s*\[\]\s*', Name.Class, ('triple','predObj')),
+            include('whitespaces'),
+            # declaration ::= base|prefix|keywords
+            (r'(@(?:prefix|base)\s*)(\w*:\s+)?(<[^>]*>\s*\.)', bygroups(Keyword,Name.Variable,Name.Namespace)),
+            (r'(@keywords)(\s*\w+\s*,)*(\s*\w+)', bygroups(Keyword,Text,Text)),
+            # existential|universal
+            (r'@forSome|@forAll', Name.Class, 'symbol_csl'),
+            # Terminating a formula
+            (r'\}', Punctuation, '#pop'),
+        ] + expression(Name.Class, 'propertyList'),
+        'propertyList': [
+            #predicate ::= | "<=" 
+            #              | "=" 
+            #              | "=>" 
+            #              | "@a" 
+            #              | "@has"  expression
+            #              | "@is"  expression  "@of" 
+            #              | expression
+            include('whitespaces'),
+            (r';', Punctuation),
+            (r'(<=|=>|=|@?a(?=\s))', Operator, 'objectList'),
+            (r'\.', Punctuation, '#pop'),
+            (r'\]', Punctuation, '#pop'),
+            (r'(?=\})', Text, '#pop'),
+        ] + expression(Name.Function, 'objectList'),
+        'objectList': [
+            include('whitespaces'),
+            (r',', Punctuation),
+            (r'(?=;)', Text, '#pop'),
+            (r'(?=\.)', Text, '#pop'),
+            (r'(?=\])', Text, '#pop'),
+            (r'(?=\})', Text, '#pop'),
+        ] + expression(Name.Attribute, ()),
+        'list': [
+            include('objectList'),
+            (r'\)', Punctuation, '#pop'),
         ],
-        'triple' : [
-            (r'\s*\.\s*', Text, '#pop')
+        'symbol_csl': [
+            include('whitespaces'),
+            (r',', Punctuation),
+            (_symbol, Name.Variable),
+            (r'.', Punctuation, '#pop'),
         ],
-        'predObj': [
-            include('comments'),
-            (r'(\s*[a-zA-Z_:][a-zA-Z0-9\-_:]*\b\s*)', Operator, 'object'),
-            (r'\s*(<[^>]*\>)', Operator, 'object'),
-            (r'\s*\]\s*', Text, '#pop'),
-            (r'(?=\s*\.\s*)', Keyword, '#pop'), 
-        ],
-        'objList': [
-            include('comments'),
-            (r'\s*\)', Text, '#pop'),
-            include('object')
-        ],
-        'object': [
-            include('comments'),
-            (r'\s*\[', Text, 'predObj'),
-            (r'\s*<[^> ]*>', Name.Attribute),
-            (r'\s*("""(?:.|\n)*?""")(\@[a-z]{2-4}|\^\^<?[a-zA-Z0-9\-\:_#/\.]*>?)?\s*', bygroups(Literal.String,Text)),
-            (r'\s*".*?[^\\]"(?:\@[a-z]{2-4}|\^\^<?[a-zA-Z0-9\-\:_#/\.]*>?)?\s*', Literal.String),
-            (r'\s*[a-zA-Z0-9\-_\:]\s*', Name.Attribute),
-            (r'\s*\(', Text, 'objList'),
-            (r'\s*;\s*\n?', Text, '#pop'),
-            (r'(?=\s*\])', Text, '#pop'),            
-            (r'(?=\s*\.)', Text, '#pop'),           
+        'dtlang': [
+            #dtlang ::= "@" langcode|"^^" symbol|void
+            (r'@[a-z]+(-[a-z0-9]+)*', Name.Attribute, '#pop'),
+            (r'^^'+_symbol, Name.Attribute, '#pop'),
+            (r'', Text, '#pop'),
         ],
     }
 
