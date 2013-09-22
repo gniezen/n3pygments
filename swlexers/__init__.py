@@ -133,7 +133,7 @@ class Notation3Lexer(RegexLexer):
         'dtlang': [
             #dtlang ::= "@" langcode|"^^" symbol|void
             (r'@[a-z]+(-[a-z0-9]+)*', Name.Attribute, '#pop'),
-            (r'^^'+_symbol, Name.Attribute, '#pop'),
+            (r'\^\^'+_symbol, Name.Attribute, '#pop'),
             (r'', Text, '#pop'),
         ],
     }
