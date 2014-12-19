@@ -28,7 +28,7 @@ __all__ = ['Notation3Lexer','SparqlLexer']
 # expressions correspond.
 
 _explicit_uri = r'<[^>]*>'
-_qname = r'((\w[-\w]*)?:)?\w[-\w]*|(\w[-\w]*)?:' #(([:letter:][-\w]*)?:)?[:letter:][.\w]*
+_qname = r'((\w[-\w]*)?:)?\S[-\w]*|(\w[-\w]*)?:' #(([:letter:][-\w]*)?:)?[:letter:][.\w]*
 _symbol = '(' + _qname + '|' + _explicit_uri +')'
 _quickvariable = r'\?\w+'
 
@@ -90,7 +90,7 @@ class Notation3Lexer(RegexLexer):
         'root': [
             include('whitespaces'),
             # declaration ::= base|prefix|keywords
-            (r'(@(?:prefix|base)\s*)([^\!\"\#\$\&\'\(\)\*\,\+\/\;\<\=\>\?\@\[\\\]\^\`\{\|\}\~]*:\s+)?(<[^>]*>\s*\.)', bygroups(Keyword,Name.Variable,Name.Namespace)),
+            (r'(@(?:prefix|base)\s*)(\S*:\s+)?(<[^>]*>\s*\.)', bygroups(Keyword,Name.Variable,Name.Namespace)),
             (r'(@keywords)(\s*\w+\s*,)*(\s*\w+)', bygroups(Keyword,Text,Text)),
             # existential|universal
             (r'@forSome|@forAll', Name.Class, 'symbol_csl'),
