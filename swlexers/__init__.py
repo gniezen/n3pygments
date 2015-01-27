@@ -28,7 +28,7 @@ __all__ = ['Notation3Lexer','SparqlLexer']
 # expressions correspond.
 
 _explicit_uri = r'<[^>]*>'
-_qname = r'((\w[-\w]*)?:)?\S[-\w]*|(\w[-\w]*)?:' #(([:letter:][-\w]*)?:)?[:letter:][.\w]*
+_qname = r'((\w[-\w]*)?:)?\w[-\w]*|(\w[-\w]*)?:' #(([:letter:][-\w]*)?:)?[:letter:][.\w]*
 _symbol = '(' + _qname + '|' + _explicit_uri +')'
 _quickvariable = r'\?\w+'
 
