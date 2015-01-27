@@ -90,7 +90,7 @@ class Notation3Lexer(RegexLexer):
         'root': [
             include('whitespaces'),
             # declaration ::= base|prefix|keywords
-            (r'(@(?:prefix|base)\s*)(\S*:\s+)?(<[^>]*>\s*\.)', bygroups(Keyword,Name.Variable,Name.Namespace)),
+            (r'(@(?:prefix|base)\s*)([^\!\"\#\$\&\'\(\)\*\,\+\/\;\<\=\>\?\@\[\\\]\^\`\{\|\}\~]*:\s+)?(<[^>]*>\s*\.)', bygroups(Keyword,Name.Variable,Name.Namespace)),
             (r'(@keywords)(\s*\w+\s*,)*(\s*\w+)', bygroups(Keyword,Text,Text)),
             # existential|universal
             (r'@forSome|@forAll', Name.Class, 'symbol_csl'),
