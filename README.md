@@ -7,7 +7,7 @@ This is a [Pygments](http://http://pygments.org/) lexer that performs syntax hig
 * n3, turtle : Turtle/N3/NT (*.ttl, *.n3 and *.NT) 
 * sparql : SPARQL (*.sparql)
 
-Run
+Make sure you're running Pygments 1.7 or higher and run
 
     sudo python setup.py install
     
