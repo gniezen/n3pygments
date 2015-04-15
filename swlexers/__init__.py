@@ -166,7 +166,7 @@ class SparqlLexer(RegexLexer):
             (r'(\s*)((?:INSERT|DELETE)\s*(?:DATA)?)\s*',bygroups(Text, Keyword),'quaddata'),
             (r'(\s*)(CONSTRUCT)?\s*({)',bygroups(Text, Keyword,Punctuation),'graph'),
             (r'(\s*)(FROM\s*(?:NAMED)?)(\s*.*)', bygroups(Text, Keyword,Text)),
-            (r'(\s*)(WHERE)?\s*({)',bygroups(Text, Keyword, Punctuation),'groupgraph'),
+            (r'(\s*)(WHERE\s?)?\s*({)',bygroups(Text, Keyword, Punctuation),'groupgraph'),
             (r'(\s*)(LIMIT|OFFSET)(\s*[+-]?[0-9]+)',bygroups(Text, Keyword,Literal.String)),
 			(r'(ORDER BY (?:ASC|DESC)\s*)(\()\s*',bygroups(Text, Keyword,Punctuation),'bindgraph'),
             (r'(\s*)(})', bygroups(Text, Punctuation)), 
